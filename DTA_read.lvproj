@@ -17,7 +17,6 @@
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="LVDateTimeRec.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/miscctls.llb/LVDateTimeRec.ctl"/>
 			</Item>
-			<Item Name="hit_data.ctl" Type="VI" URL="../../hit_data.ctl"/>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
