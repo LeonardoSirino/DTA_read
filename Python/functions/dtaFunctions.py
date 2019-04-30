@@ -1,9 +1,15 @@
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
 class dtaFileHandler:
     def __init__(self, file):
         self.file = file
         self.IDs = []
         self.Data = dtaData()
         self.Config = dtaConfig()
+        self.Config.set_sample_rate(4E6)  # Determinar esse valor pelo arquivo!
+        self.num_hits = 0
         self.AE_params = {
             1: (2, 'RiseTime'),
             2: (2, 'CountsToPeak'),
@@ -55,6 +61,7 @@ class dtaFileHandler:
 
     def __dta_date(self, content):
         self.date = str(content)
+        print('Começo do ensaio')
 
     def __dta_hit(self, content):
         time = int.from_bytes(content[:6], byteorder='little')
@@ -62,6 +69,10 @@ class dtaFileHandler:
         data = content[7:]
         hit = Hit(channel, time, data)
         self.Data.add_hit(hit)
+        self.num_hits += 1
+        if self.num_hits % 10 == 0:
+            os.system('cls')
+            print('Hits identificados: ' + str(self.num_hits))
 
     def __dta_hw_setup(self, content):
         content = content[3:]  # Informações de versão do arquivo DTA
@@ -79,7 +90,7 @@ class dtaFileHandler:
 
             content = content[size:]
 
-        print(IDs)
+        # print(IDs)
 
     def __dta_set_HDT(self, content):
         ch = content[0]
@@ -87,13 +98,11 @@ class dtaFileHandler:
         HDT = int.from_bytes(HDT, byteorder='little')
         # print('HDT de ' + str(HDT) + ' no canal ' + str(ch))
 
-    def __dta_test_start(self):
-        self.test_started = True
-        print('Começo do ensaio')
-
     def __dta_test_end(self, content):
         self.test_closed = True
-        print('Fim de ensaio')
+        os.system('cls')
+        print('Hits identificados: ' + str(self.num_hits))
+        print('Fim do ensaio')
 
     def __dta_event_data_set_def(self, content):
         num_param = content[0]
@@ -107,22 +116,22 @@ class dtaFileHandler:
 
         self.Config.set_hit_structure(hit_struct)
 
-        
     def __dta_not_defined(self, content):
         pass
 
 
 class Hit:
     struct = []
+    rate = 1
 
     def __init__(self, channel, time, content):
         self.raw_content = content
         self.params = {
             'ch': channel,
-            'time': time
-            }
+            'time': time / Hit.rate
+        }
         self.__parseContent(content)
-        
+
     def __parseContent(self, content):
         pointer = 0
         for param in Hit.struct:
@@ -171,6 +180,10 @@ class dtaConfig:
         self.hit_struct = struct
         Hit.struct = struct
 
+    def set_sample_rate(self, rate):
+        self.rate = rate
+        Hit.rate = rate
+
 
 class dtaData:
     def __init__(self):
@@ -187,3 +200,70 @@ class dtaData:
             text += hit.get_flat_data() + '\n'
 
         return text
+
+    def plot_polars(self):
+        chs = self.get_param('ch')
+        amps = self.get_param('Amp')
+        times = self.get_param('time')
+        polar = Polars()
+
+        data = np.vstack((chs, amps, times))
+        data = data.transpose()
+
+        for line in data:
+            ch, amp, time = line
+            polar.add_hit(ch, time, amp)
+
+        polar.plot()
+
+    def get_param(self, name):
+        values = np.zeros(len(self.hits))
+        for i, hit in enumerate(self.hits):
+            values[i] = hit.params[name]
+
+        return values
+
+
+class polarChannel:
+    def __init__(self, number):
+        self.number = int(number)
+        self.angs = np.linspace(0, 2 * np.pi, 360)
+        self.conts = np.zeros(360)
+        self.acu_amps = np.zeros(360)
+
+    def add_hit(self, amp, time):
+        ang = (time / (1 / 60)) % 1
+        ang *= 360
+        self.conts[int(ang)] += 1
+        self.acu_amps[int(ang)] += amp
+
+class Polars:
+    def __init__(self):
+        self.channels = []
+        self.ch_nums = []
+
+    def __new_channel(self, ch_num):
+        channel = polarChannel(ch_num)
+        self.channels.append(channel)
+        self.ch_nums.append(ch_num)
+
+    def get_channel(self, ch_num):
+        if ch_num not in self.ch_nums:
+            self.__new_channel(ch_num)
+
+        index = self.ch_nums.index(ch_num)
+        channel = self.channels[index]
+        return channel
+
+    def add_hit(self, ch, time, amp):
+        channel = self.get_channel(ch)
+        channel.add_hit(amp, time)
+
+    def plot(self):
+        legend = []
+        for channel in self.channels:
+            plt.polar(channel.angs, channel.acu_amps)
+            legend.append('Canal ' + str(channel.number))
+
+        plt.legend(legend)
+        plt.show()
