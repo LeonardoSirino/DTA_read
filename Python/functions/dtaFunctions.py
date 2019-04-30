@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class dtaFileHandler:
     def __init__(self, file):
         self.file = file
@@ -70,7 +71,7 @@ class dtaFileHandler:
         hit = Hit(channel, time, data)
         self.Data.add_hit(hit)
         self.num_hits += 1
-        if self.num_hits % 10 == 0:
+        if self.num_hits % 100 == 0:
             os.system('cls')
             print('Hits identificados: ' + str(self.num_hits))
 
@@ -201,20 +202,25 @@ class dtaData:
 
         return text
 
-    def plot_polars(self):
+    def export_polars(self):
         chs = self.get_param('ch')
         amps = self.get_param('Amp')
         times = self.get_param('time')
-        polar = Polars()
 
         data = np.vstack((chs, amps, times))
         data = data.transpose()
 
         for line in data:
             ch, amp, time = line
-            polar.add_hit(ch, time, amp)
+            self.polar.add_hit(ch, time, amp)
 
-        polar.plot()
+        self.polar.export()
+
+    def set_polars_export(self, dir_figs, test_name):
+        polar = Polars()
+        polar.dir_figs = dir_figs
+        polar.test_name = test_name
+        self.polar = polar
 
     def get_param(self, name):
         values = np.zeros(len(self.hits))
@@ -228,19 +234,23 @@ class polarChannel:
     def __init__(self, number):
         self.number = int(number)
         self.angs = np.linspace(0, 2 * np.pi, 360)
-        self.conts = np.zeros(360)
+        self.counts = np.zeros(360)
         self.acu_amps = np.zeros(360)
 
     def add_hit(self, amp, time):
         ang = (time / (1 / 60)) % 1
         ang *= 360
-        self.conts[int(ang)] += 1
+        self.counts[int(ang)] += 1
         self.acu_amps[int(ang)] += amp
+
 
 class Polars:
     def __init__(self):
         self.channels = []
         self.ch_nums = []
+        self.min_count = 0
+        self.dir_figs = ''
+        self.test_name = ''
 
     def __new_channel(self, ch_num):
         channel = polarChannel(ch_num)
@@ -259,11 +269,29 @@ class Polars:
         channel = self.get_channel(ch)
         channel.add_hit(amp, time)
 
-    def plot(self):
+    def export(self):
+        for channel in self.channels:
+            if np.max(channel.counts) >= self.min_count:
+                plt.polar(channel.angs, channel.counts)
+                AcuAmpsNorm = channel.acu_amps / \
+                    np.max(channel.acu_amps) * np.max(channel.counts)
+                plt.polar(channel.angs, 0.5 * AcuAmpsNorm)
+                plt.title(self.test_name + " - CH " + str(int(channel.number)))
+                plt.legend(["Número de Hits", "Amplitude acumulada"])
+                fig_name = self.test_name + " - CH " + \
+                    str(int(channel.number)) + ".png"
+                fig_path = os.path.join(self.dir_figs, fig_name)
+                plt.savefig(fig_path)
+                plt.clf()
+
         legend = []
         for channel in self.channels:
-            plt.polar(channel.angs, channel.acu_amps)
-            legend.append('Canal ' + str(channel.number))
+            if np.max(channel.counts) >= self.min_count:
+                plt.polar(channel.angs, channel.counts)
+                legend.append('Canal ' + str(channel.number))
 
+        plt.title(self.test_name)
         plt.legend(legend)
-        plt.show()
+        fig_name = self.test_name + ".png"
+        fig_path = os.path.join(self.dir_figs, fig_name)
+        plt.savefig(fig_path)
