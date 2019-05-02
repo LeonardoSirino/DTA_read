@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class dtaFileHandler:
-    def __init__(self, file):
-        self.file = file
+    def __init__(self):
         self.IDs = []
         self.Data = dtaData()
         self.Config = dtaConfig()
@@ -29,6 +28,12 @@ class dtaFileHandler:
             15: (6, 'Reserved'),
             16: (4, 'Reserved')
         }
+
+    def set_file(self, file):
+        self.file = file
+
+    def clear_data(self):
+        self.Data.reset_data()
 
     def read_block(self):
         size = self.file.read(2)
@@ -191,9 +196,15 @@ class dtaData:
         self.hits = []
         self.comments = []
         self.time_marks = []
+        self.polar = None
 
     def add_hit(self, hit):
         self.hits.append(hit)
+
+    def reset_data(self):
+        self.hits = []
+        self.comments = []
+        self.time_marks = []
 
     def __str__(self):
         text = ''
@@ -216,11 +227,18 @@ class dtaData:
 
         self.polar.export()
 
-    def set_polars_export(self, dir_figs, test_name):
-        polar = Polars()
-        polar.dir_figs = dir_figs
-        polar.test_name = test_name
-        self.polar = polar
+    def set_polars_export(self, ind_dir, acu_dir, test_name):
+        self.polar.ind_dir = ind_dir
+        self.polar.acu_dir = acu_dir
+        self.polar.test_number = test_name.split('_')[-1]
+        
+    def init_polars(self):
+        if self.polar == None:
+            polar = Polars()
+            self.polar = polar
+
+    def reset_polars(self):
+        self.polar.reset_all_channels()
 
     def get_param(self, name):
         values = np.zeros(len(self.hits))
@@ -235,13 +253,22 @@ class polarChannel:
         self.number = int(number)
         self.angs = np.linspace(0, 2 * np.pi, 360)
         self.counts = np.zeros(360)
+        self.acu_counts = np.zeros(360)
+        self.amps = np.zeros(360)
         self.acu_amps = np.zeros(360)
 
     def add_hit(self, amp, time):
         ang = (time / (1 / 60)) % 1
         ang *= 360
         self.counts[int(ang)] += 1
+        self.acu_counts[int(ang)] += 1
+        self.amps[int(ang)] += amp
         self.acu_amps[int(ang)] += amp
+
+    def reset_data(self):
+        self.counts = np.zeros(360)
+        self.amps = np.zeros(360)
+
 
 
 class Polars:
@@ -249,8 +276,9 @@ class Polars:
         self.channels = []
         self.ch_nums = []
         self.min_count = 0
-        self.dir_figs = ''
-        self.test_name = ''
+        self.ind_dir = ''
+        self.acu_dir = ''
+        self.test_number = ''
 
     def __new_channel(self, ch_num):
         channel = polarChannel(ch_num)
@@ -269,29 +297,45 @@ class Polars:
         channel = self.get_channel(ch)
         channel.add_hit(amp, time)
 
+    def reset_all_channels(self):
+        for channel in self.channels:
+            channel.reset_data()
+
     def export(self):
         for channel in self.channels:
             if np.max(channel.counts) >= self.min_count:
                 plt.polar(channel.angs, channel.counts)
-                AcuAmpsNorm = channel.acu_amps / \
-                    np.max(channel.acu_amps) * np.max(channel.counts)
+                AcuAmpsNorm = channel.amps / np.max(channel.amps) * np.max(channel.counts)
                 plt.polar(channel.angs, 0.5 * AcuAmpsNorm)
-                plt.title(self.test_name + " - CH " + str(int(channel.number)))
+                title = 'Ch' + str(channel.number) + '_' + self.test_number
+                plt.title(title)
                 plt.legend(["Número de Hits", "Amplitude acumulada"])
-                fig_name = self.test_name + " - CH " + \
-                    str(int(channel.number)) + ".png"
-                fig_path = os.path.join(self.dir_figs, fig_name)
+                fig_name = title + ".png"
+                fig_path = os.path.join(self.ind_dir, fig_name)
+                plt.savefig(fig_path)
+                plt.clf()
+                
+        for channel in self.channels:
+            if np.max(channel.acu_counts) >= self.min_count:
+                plt.polar(channel.angs, channel.acu_counts)
+                AcuAmpsNorm = channel.acu_amps / np.max(channel.acu_amps) * np.max(channel.acu_counts)
+                plt.polar(channel.angs, 0.5 * AcuAmpsNorm)
+                title = 'Ch' + str(channel.number)
+                plt.title(title)
+                plt.legend(["Número de Hits", "Amplitude acumulada"])
+                fig_name = title + ".png"
+                fig_path = os.path.join(self.acu_dir, fig_name)
                 plt.savefig(fig_path)
                 plt.clf()
 
         legend = []
         for channel in self.channels:
-            if np.max(channel.counts) >= self.min_count:
-                plt.polar(channel.angs, channel.counts)
+            if np.max(channel.acu_counts) >= self.min_count:
+                plt.polar(channel.angs, channel.acu_counts)
                 legend.append('Canal ' + str(channel.number))
 
-        plt.title(self.test_name)
         plt.legend(legend)
-        fig_name = self.test_name + ".png"
-        fig_path = os.path.join(self.dir_figs, fig_name)
+        fig_name = 'Todos.png'
+        fig_path = os.path.join(self.acu_dir, fig_name)
         plt.savefig(fig_path)
+        plt.clf()
