@@ -231,7 +231,7 @@ class dtaData:
         self.polar.ind_dir = ind_dir
         self.polar.acu_dir = acu_dir
         self.polar.test_number = test_name.split('_')[-1]
-        
+
     def init_polars(self):
         if self.polar == None:
             polar = Polars()
@@ -270,7 +270,6 @@ class polarChannel:
         self.amps = np.zeros(360)
 
 
-
 class Polars:
     def __init__(self):
         self.channels = []
@@ -305,7 +304,8 @@ class Polars:
         for channel in self.channels:
             if np.max(channel.counts) >= self.min_count:
                 plt.polar(channel.angs, channel.counts)
-                AcuAmpsNorm = channel.amps / np.max(channel.amps) * np.max(channel.counts)
+                AcuAmpsNorm = channel.amps / \
+                    np.max(channel.amps) * np.max(channel.counts)
                 plt.polar(channel.angs, 0.5 * AcuAmpsNorm)
                 title = 'Ch' + str(channel.number) + '_' + self.test_number
                 plt.title(title)
@@ -314,11 +314,12 @@ class Polars:
                 fig_path = os.path.join(self.ind_dir, fig_name)
                 plt.savefig(fig_path)
                 plt.clf()
-                
+
         for channel in self.channels:
             if np.max(channel.acu_counts) >= self.min_count:
                 plt.polar(channel.angs, channel.acu_counts)
-                AcuAmpsNorm = channel.acu_amps / np.max(channel.acu_amps) * np.max(channel.acu_counts)
+                AcuAmpsNorm = channel.acu_amps / \
+                    np.max(channel.acu_amps) * np.max(channel.acu_counts)
                 plt.polar(channel.angs, 0.5 * AcuAmpsNorm)
                 title = 'Ch' + str(channel.number)
                 plt.title(title)

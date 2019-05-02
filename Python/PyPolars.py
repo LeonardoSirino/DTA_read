@@ -34,6 +34,7 @@ def select():
 
     main.quit()
 
+
 options = {}
 options['initialdir'] = os.getcwd()
 options['title'] = "Escolha o diretório de ensaio"
@@ -58,8 +59,10 @@ btn.grid(column=1, row=1)
 main.mainloop()
 
 test_name = base_path.split('/')[-1]
-individual_dir = base_path + '/GRÁFICOS POLARES - ' + test_name + '/POLARES INDIVIDUAIS/'
-acumulated_dir = base_path + '/GRÁFICOS POLARES - ' + test_name + '/POLARES ACUMULADOS/'
+individual_dir = base_path + '/GRÁFICOS POLARES - ' + \
+    test_name + '/POLARES INDIVIDUAIS/'
+acumulated_dir = base_path + '/GRÁFICOS POLARES - ' + \
+    test_name + '/POLARES ACUMULADOS/'
 os.makedirs(individual_dir)
 os.makedirs(acumulated_dir)
 
@@ -69,7 +72,7 @@ for file_name in files:
     file_path = os.path.join(base_path, file_name)
     file = open(file_path, 'rb')
     handler.set_file(file)
-    
+
     t0 = time.time()
     hasData = True
     while hasData:
@@ -79,6 +82,7 @@ for file_name in files:
 
     print(f'Processado em {t1 - t0: 0.4} s\n')
     handler.Data.init_polars()
-    handler.Data.set_polars_export(individual_dir, acumulated_dir, file_name.split('.')[0])
+    handler.Data.set_polars_export(
+        individual_dir, acumulated_dir, file_name.split('.')[0])
     handler.Data.export_polars()
     handler.Data.reset_polars()
