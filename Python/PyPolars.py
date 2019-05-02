@@ -1,22 +1,77 @@
-import os, time
+import os
+import time
 from functions.dtaFunctions import dtaFileHandler
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import ttk
 
-base_path = r'L:\Documentos\00 SERVIÇOS\Polares Léo - 07-2016\MONITORAMENTO DISJ. LINHA\MONITORAMENTO 12'
-file_name = 'Ensaio MONITORAMENTO 12_SAT_00 ao 05_linkados.DTA'
-file_path = os.path.join(base_path, file_name)
+files = []
 
-export_dir = r'C:\Users\l01481\Desktop\teste'
 
-file = open(file_path, 'rb')
-handler = dtaFileHandler(file)
+def validate_file(file_name):
+    names = file_name.split('.')
+    is_dta_file = str.lower(names[-1]) == 'dta'
+    is_cal_file = 'calibra' in str.lower(names[0])
+    try:
+        int(names[0].split('_')[-1])
+        is_single_file = True
+    except ValueError:
+        is_single_file = False
 
-t0 = time.time()
-hasData = True
-while hasData:
-    hasData = not handler.read_block()
+    valid = is_dta_file and is_single_file and not is_cal_file
+    return valid
 
-t1 = time.time()
 
-print('Processado em ' + str(round(t1 - t0, 4)) + ' s\n')
-handler.Data.set_polars_export(export_dir, file_name[:-4])
-handler.Data.export_polars()
+def select():
+    global files
+    reslist = list()
+    selection = lstbox.curselection()
+    for i in selection:
+        entrada = lstbox.get(i)
+        reslist.append(entrada)
+    for val in reslist:
+        files.append(val)
+
+    main.quit()
+
+options = {}
+options['initialdir'] = os.getcwd()
+options['title'] = "Escolha o diretório de ensaio"
+base_path = filedialog.askdirectory(**options)
+
+main = tk.Tk()
+main.title("Seleção de arquivos para geração de gráficos polares")
+main.geometry("+100+250")
+frame = ttk.Frame(main, padding=(3, 3, 12, 12))
+frame.grid(column=0, row=0, sticky=(tk.N, tk.S, tk.E, tk.W))
+
+itens = os.listdir(base_path)
+itens = filter(validate_file, itens)
+lstbox = tk.Listbox(frame, selectmode=tk.MULTIPLE, width=50, height=25)
+lstbox.grid(column=0, row=0, columnspan=2)
+for i, item in enumerate(itens):
+    lstbox.insert(i, item)
+
+btn = ttk.Button(frame, text="Ok", command=select)
+btn.grid(column=1, row=1)
+
+main.mainloop()
+
+export_dir = os.path.join(base_path, 'GRÁFICOS POLARES')
+os.mkdir(export_dir)
+
+for file_name in files:
+    file_path = os.path.join(base_path, file_name)
+    file = open(file_path, 'rb')
+    handler = dtaFileHandler(file)
+
+    t0 = time.time()
+    hasData = True
+    while hasData:
+        hasData = not handler.read_block()
+
+    t1 = time.time()
+
+    print('Processado em ' + str(round(t1 - t0, 4)) + ' s\n')
+    handler.Data.set_polars_export(export_dir, file_name[:-4])
+    handler.Data.export_polars()
