@@ -4,6 +4,7 @@ from functions.dtaFunctions import dtaFileHandler
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
+import tqdm
 
 files = []
 
@@ -67,6 +68,8 @@ os.makedirs(individual_dir)
 os.makedirs(acumulated_dir)
 
 handler = dtaFileHandler()
+print('Inicio do processamento dos ' + str(len(files)) + ' arquivos\n')
+bar = tqdm.tqdm(total=len(files))
 for file_name in files:
     handler.clear_data()
     file_path = os.path.join(base_path, file_name)
@@ -80,9 +83,14 @@ for file_name in files:
 
     t1 = time.time()
 
-    print(f'Processado em {t1 - t0: 0.4} s\n')
+    # print(f'Processado em {t1 - t0: 0.4} s\n')
     handler.Data.init_polars()
     handler.Data.set_polars_export(
         individual_dir, acumulated_dir, file_name.split('.')[0])
     handler.Data.export_polars()
     handler.Data.reset_polars()
+
+    bar.update()
+
+
+bar.close()
