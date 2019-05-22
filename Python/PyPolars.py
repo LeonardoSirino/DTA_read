@@ -18,13 +18,13 @@ def validate_file(file_name):
     except ValueError:
         is_single_file = False
 
-    valid = is_dta_file and is_single_file and not is_cal_file
+    valid = is_dta_file
     return valid
 
 
 def select():
     global files
-    reslist = list()
+    reslist = []
     selection = lstbox.curselection()
     for i in selection:
         entrada = lstbox.get(i)
@@ -41,8 +41,8 @@ options['title'] = "Escolha o diretório de ensaio"
 base_path = filedialog.askdirectory(**options)
 
 main = tk.Tk()
-main.title("Seleção de arquivos para geração de gráficos polares")
-main.geometry("+100+250")
+main.title("Escolha os arquivos para remover da análise")
+main.geometry("+150+250")
 frame = ttk.Frame(main, padding=(3, 3, 12, 12))
 frame.grid(column=0, row=0, sticky=(tk.N, tk.S, tk.E, tk.W))
 
@@ -50,8 +50,10 @@ itens = os.listdir(base_path)
 itens = filter(validate_file, itens)
 lstbox = tk.Listbox(frame, selectmode=tk.MULTIPLE, width=50, height=25)
 lstbox.grid(column=0, row=0, columnspan=2)
+all_files = []
 for i, item in enumerate(itens):
     lstbox.insert(i, item)
+    all_files.append(item)
 
 btn = ttk.Button(frame, text="Ok", command=select)
 btn.grid(column=1, row=1)
@@ -67,6 +69,10 @@ os.makedirs(individual_dir)
 os.makedirs(acumulated_dir)
 
 handler = dtaFileHandler()
+for file_name in files:
+    all_files.remove(file_name)
+
+files = all_files[:]
 for file_name in files:
     handler.clear_data()
     file_path = os.path.join(base_path, file_name)
@@ -86,3 +92,5 @@ for file_name in files:
         individual_dir, acumulated_dir, file_name.split('.')[0])
     handler.Data.export_polars()
     handler.Data.reset_polars()
+
+print(files)
