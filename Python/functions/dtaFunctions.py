@@ -67,7 +67,7 @@ class dtaFileHandler:
 
     def __dta_date(self, content):
         self.date = str(content)
-        print('Começo do ensaio')
+        # print('Começo do ensaio')
 
     def __dta_hit(self, content):
         time = int.from_bytes(content[:6], byteorder='little')
@@ -76,9 +76,11 @@ class dtaFileHandler:
         hit = Hit(channel, time, data)
         self.Data.add_hit(hit)
         self.num_hits += 1
-        if self.num_hits % 100 == 0:
+        """
+        if self.num_hits % 5000 == 0:
             os.system('cls')
             print('Hits identificados: ' + str(self.num_hits))
+        """
 
     def __dta_hw_setup(self, content):
         content = content[3:]  # Informações de versão do arquivo DTA
@@ -106,9 +108,9 @@ class dtaFileHandler:
 
     def __dta_test_end(self, content):
         self.test_closed = True
-        os.system('cls')
-        print('Hits identificados: ' + str(self.num_hits))
-        print('Fim do ensaio')
+        # os.system('cls')
+        # print('Hits identificados: ' + str(self.num_hits))
+        # print('Fim do ensaio')
 
     def __dta_event_data_set_def(self, content):
         num_param = content[0]
