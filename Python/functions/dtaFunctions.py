@@ -29,7 +29,7 @@ class dtaFileHandler:
             16: (4, 'Reserved')
         }
 
-    def override_sample_rate(self, sample_rate);
+    def override_sample_rate(self, sample_rate):
         self.Config.set_sample_rate(sample_rate)  # Determinar esse valor pelo arquivo!
 
     def set_file(self, file):
