@@ -8,6 +8,7 @@ import tqdm
 
 files = []
 
+SAMPLE_RATE = 4E6 # Taxa de aquisição de 4 MHz. Atualizar esse valor para diferentes ensaios!!!!!
 
 def validate_file(file_name):
     names = file_name.split('.')
@@ -73,6 +74,7 @@ for file_name in files:
     all_files.remove(file_name)
 
 handler = dtaFileHandler()
+handler.override_sample_rate(SAMPLE_RATE)
 bar = tqdm.tqdm(total=len(all_files))
 print('Inicio do processamento dos ' + str(len(all_files)) + ' arquivos\n')
 

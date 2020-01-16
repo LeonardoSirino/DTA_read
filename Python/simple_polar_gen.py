@@ -5,6 +5,8 @@ import tqdm
 import tkinter as tk
 from tkinter import filedialog
 
+SAMPLE_RATE = 4E6 # Taxa de aquisição de 4 MHz. Atualizar esse valor para diferentes ensaios!!!!!
+
 files = []
 
 options = {}
@@ -28,6 +30,7 @@ except FileExistsError:
     pass
 
 handler = dtaFileHandler()
+handler.override_sample_rate(SAMPLE_RATE)
 bar = tqdm.tqdm(total=len(all_files))
 print('Inicio do processamento dos ' + str(len(all_files)) + ' arquivos\n')
 

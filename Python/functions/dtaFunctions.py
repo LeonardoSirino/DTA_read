@@ -8,7 +8,7 @@ class dtaFileHandler:
         self.IDs = []
         self.Data = dtaData()
         self.Config = dtaConfig()
-        self.Config.set_sample_rate(4E6)  # Determinar esse valor pelo arquivo!
+        # self.Config.set_sample_rate(4E6)  # Determinar esse valor pelo arquivo!
         self.num_hits = 0
         self.AE_params = {
             1: (2, 'RiseTime'),
@@ -28,6 +28,9 @@ class dtaFileHandler:
             15: (6, 'Reserved'),
             16: (4, 'Reserved')
         }
+
+    def override_sample_rate(self, sample_rate);
+        self.Config.set_sample_rate(sample_rate)  # Determinar esse valor pelo arquivo!
 
     def set_file(self, file):
         self.file = file
