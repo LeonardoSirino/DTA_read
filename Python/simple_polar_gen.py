@@ -5,7 +5,7 @@ import tqdm
 import tkinter as tk
 from tkinter import filedialog
 
-SAMPLE_RATE = 4E6 # Taxa de aquisição de 4 MHz. Atualizar esse valor para diferentes ensaios!!!!!
+SAMPLE_RATE = 10E6 # Taxa de aquisição de 4 MHz. Atualizar esse valor para diferentes ensaios!!!!!
 
 files = []
 
@@ -20,7 +20,7 @@ all_files = list(all_files)
 
 test_name = base_path.split('/')[-1]
 individual_dir = base_path + '/GRÁFICOS POLARES - ' + \
-    test_name + '/POLARES INDIVIDUAIS/'
+    test_name + '/POLARES INDIVIDUAIS /'
 acumulated_dir = base_path + '/GRÁFICOS POLARES - ' + \
     test_name + '/POLARES ACUMULADOS/'
 try:
