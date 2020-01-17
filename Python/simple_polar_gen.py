@@ -19,13 +19,11 @@ all_files = filter(lambda file_name : '.dta' in str.lower(file_name), all_files)
 all_files = list(all_files)
 
 test_name = base_path.split('/')[-1]
-individual_dir = base_path + '/GRÁFICOS POLARES - ' + \
-    test_name + '/POLARES INDIVIDUAIS /'
-acumulated_dir = base_path + '/GRÁFICOS POLARES - ' + \
-    test_name + '/POLARES ACUMULADOS/'
+polars_dir = base_path + '/GRÁFICOS POLARES - ' + \
+    test_name + '/POLARES/'
+
 try:
-    os.makedirs(individual_dir)
-    os.makedirs(acumulated_dir)
+    os.makedirs(polars_dir)
 except FileExistsError:
     pass
 
@@ -51,8 +49,7 @@ for file_name in files:
 
     # print(f'Processado em {t1 - t0: 0.4} s\n')
     handler.Data.init_polars()
-    handler.Data.set_polars_export(
-        individual_dir, acumulated_dir, file_name.split('.')[0])
+    handler.Data.set_polars_export(file_name.split('.')[0], ind_dir=polars_dir)
     handler.Data.export_polars()
     handler.Data.reset_polars()
 
