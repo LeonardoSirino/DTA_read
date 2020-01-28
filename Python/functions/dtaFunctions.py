@@ -70,14 +70,18 @@ class dtaFileHandler:
         func(content)
 
     def __dta_time_stamp(self, content):
-        time = int.from_bytes(content[:6], byteorder='little')
-        message_text = str(content[6:], encoding='utf-8')
-        message = {
-            'time': time,
-            'text': message_text
-        }
+        try:
+            time = int.from_bytes(content[:6], byteorder='little')
+            message_text = str(content[6:], encoding='utf-8')
+            message = {
+                'time': time,
+                'text': message_text
+            }
 
-        self.Data.add_comment(message)
+            self.Data.add_comment(message)
+        except UnicodeDecodeError:
+            # print('Erro na codificação do time stamp')
+            pass
 
 
     def __dta_date(self, content):

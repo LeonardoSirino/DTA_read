@@ -4,8 +4,11 @@ from functions.dtaFunctions import dtaFileHandler
 import tqdm
 import tkinter as tk
 from tkinter import filedialog
+import warnings
 
-SAMPLE_RATE = 10E6 # Taxa de aquisição de 4 MHz. Atualizar esse valor para diferentes ensaios!!!!!
+warnings.filterwarnings("ignore")
+
+SAMPLE_RATE = 10E6 # Taxa de aquisição de 10 MHz. Atualizar esse valor para diferentes ensaios!!!!!
 
 files = []
 
@@ -34,7 +37,7 @@ print('Inicio do processamento dos ' + str(len(all_files)) + ' arquivos\n')
 
 files = all_files[:]
 for file_name in files:
-    print(file_name)
+    # print(file_name)
     handler.clear_data()
     file_path = os.path.join(base_path, file_name)
     file = open(file_path, 'rb')
